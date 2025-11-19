@@ -1,6 +1,7 @@
 #![no_std]
 use embedded_hal::delay::DelayNs;
-use embedded_hal::i2c::{I2c, Operation};
+use embedded_hal::i2c::Operation;
+use micromath::F32Ext;
 
 const DEFAULT_DEVICE_ID: u8 = 0x1E;
 pub const LIS2MDL_CFG_REG_A: u8 = 0x60;
@@ -12,7 +13,6 @@ const DELAY_TIME: u32 = 125;
 const CHIP_ID: u8 = 0x40;
 const LIS2MDL_MAG_LSB: f32 = 1.5; // mgauss/LSB
 const LIS2MDL_MILLIGAUSS_TO_MICROTESLA: f32 = 0.1; // 1 mgauss = 0.1 microtesla
-use micromath::F32Ext;
 
 #[derive(Debug)]
 pub struct Lis2mdl<I2C, DELAY> {
@@ -60,16 +60,16 @@ where
         // self.delay.delay_ns(10_000);
         // self.set_register(LIS2MDL_CFG_REG_C, 0x11)?;
         // self.delay.delay_ns(10_000);
-            // First: ensure I²C mode by explicitly clearing I2C_DISABLE
-        self.set_register(LIS2MDL_CFG_REG_C, 0x00)?;   // I²C enabled, auto-inc off
+        // First: ensure I²C mode by explicitly clearing I2C_DISABLE
+        self.set_register(LIS2MDL_CFG_REG_C, 0x00)?; // I²C enabled, auto-inc off
         self.delay.delay_ns(5000);
 
         // Now enable auto-increment + BDU
-        self.set_register(LIS2MDL_CFG_REG_C, 0x11)?;   // IF_ADD_INC = 1, BDU = 1
+        self.set_register(LIS2MDL_CFG_REG_C, 0x11)?; // IF_ADD_INC = 1, BDU = 1
         self.delay.delay_ns(5000);
 
         // Finally, set reliable ODR + temp comp
-        self.set_register(LIS2MDL_CFG_REG_A, 0x00)?;   // continuous mode, ODR default
+        self.set_register(LIS2MDL_CFG_REG_A, 0x00)?; // continuous mode, ODR default
         self.delay.delay_ns(5000);
 
         self.set_register(LIS2MDL_CFG_REG_B, 0x00)?;
@@ -93,10 +93,7 @@ where
 
     pub fn get_register(&mut self, reg: u8) -> Result<u8, Error<E>> {
         let mut buffer = [0u8; 1];
-        let mut operations = [
-            Operation::Write(&[reg]),
-            Operation::Read(&mut buffer),
-        ];
+        let mut operations = [Operation::Write(&[reg]), Operation::Read(&mut buffer)];
         self.i2c
             .transaction(self.address, &mut operations)
             .map_err(Error::I2C)?;
@@ -118,7 +115,7 @@ where
         (x, y, z)
     }
 
-    pub fn get_heading (&mut self) -> f32 {
+    pub fn get_heading(&mut self) -> f32 {
         let (x, y, _z) = self.current_xyz();
 
         // save min/max for calibration
