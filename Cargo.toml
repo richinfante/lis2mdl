@@ -1,0 +1,10 @@
+[package]
+name = "lis2mdl"
+version = "0.1.0"
+edition = "2024"
+authors = ["Rich Infante <rich@richinfante.com>"]
+license = "MIT"
+
+[dependencies]
+embedded-hal = "1.0.0"
+micromath = "=2.0.0"
